@@ -1,1 +1,2 @@
 langchain==0.0.281
+google-api-python-client==2.85.0
