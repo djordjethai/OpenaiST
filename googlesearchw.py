@@ -1,3 +1,4 @@
+import streamlit as st
 from langchain.utilities import GoogleSearchAPIWrapper
 from langchain.utilities import GoogleSerperAPIWrapper
 import pprint
@@ -7,14 +8,13 @@ SERPER_API_KEY = os.environ.get("SERPER_API_KEY")
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 GOOGLE_CSE_ID = os.environ.get("GOOGLE_CSE_ID")
 
-izbor = int(
-    input("Enter 1 for GoogleSearchAPIWrapper or 2 for GoogleSerperAPIWrapper: ")
-)
-if izbor == 1:
-    search = GoogleSearchAPIWrapper()
-elif izbor == 2:
-    search = GoogleSerperAPIWrapper()
-mysearch = input("Enter your search query: ")
-results = search.results(mysearch, num_results=3)
+izbor = st.radio("Choose method: ", ("Google Search" , "Google Serper"))
 
-pprint.pp(results)
+if izbor == "Google Search":
+    search = GoogleSearchAPIWrapper()
+else:
+    search = GoogleSerperAPIWrapper()
+mysearch = st.text_input("Enter your search query: ")
+if mysearch:
+    results = search.results(mysearch, num_results=3)
+    st.write(results)
