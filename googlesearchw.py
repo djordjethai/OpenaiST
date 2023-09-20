@@ -1,7 +1,6 @@
 import streamlit as st
 from langchain.utilities import GoogleSearchAPIWrapper
 from langchain.utilities import GoogleSerperAPIWrapper
-import pprint
 import os
 
 SERPER_API_KEY = os.environ.get("SERPER_API_KEY")
