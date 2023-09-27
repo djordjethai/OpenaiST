@@ -46,7 +46,7 @@ This Python code is a Streamlit application that creates a user interface for vi
 
 ## Import Statements uputstvo.py
 
-The code begins with import statements to bring in the necessary libraries and modules:
+The code begins with import statements to bring in the necessary libraries and modules: šđčćž
 
 - `streamlit as st`: The Streamlit library is used for creating the user interface.
 - `pandas as pd` and `numpy as np`: These libraries are used for data manipulation and generation.
