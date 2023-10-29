@@ -3,6 +3,8 @@
 !prompt_FT.txt
 !packages.txt
 *.json
+!credentials.json
+!token.json
 *.exe
 *.mp3
 *.pdf
