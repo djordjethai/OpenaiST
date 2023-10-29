@@ -125,6 +125,7 @@ def main():
                     Treba rešiti: Zašto se čitaju dva sajta, tj šta ako su isti zakoni?
                     Treba rešiti: Koji period ili broj zakona se čita? Kako postaviti filtere?
                     Tehničko pitanje: za sada program čuva tekstove u fajlove, da li je moguće da se čuvaju u varijable?
+                    Kasnije: Da se email šalje sa positive.rs naloga tj da se koristi Outlook i office365
                     """
             )
     with st.form("mail_form"):
