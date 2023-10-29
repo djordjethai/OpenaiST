@@ -112,7 +112,7 @@ def procitaj_parlament():
                                 link = "http://www.parlament.gov.rs" + href.replace(" ", "%20") 
                                 ime_fajla = dl_parlament(link)
                                 suma = sumiraj_zakone(ime_fajla, description)
-                                izvestaj = f"Sa sajta {url} sumiram zakon sa linka {link} \n Evo i krakog pregleda zakona \n {suma}" 
+                                izvestaj = f"Sa sajta {url} sumiram zakon sa linka {link} \n\n Evo i krakog pregleda zakona: \n\n {suma}" 
                                 return izvestaj
     
 # prima ceo tekst maila, sa sve linkovima i sa sezecima
