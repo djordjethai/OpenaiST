@@ -256,3 +256,59 @@ def dl_pdf():
 # # •	UREDBA O KOLIČINI RASHODA (KALO, RASTUR, KVAR I LOM) NA KOJI SE NE PLAĆA AKCIZA
 # # •	ODLUKA O OBRAZOVANJU SAVETA ZA MALA I SREDNJA PREDUZEĆA, PREDUZETNIŠTVO I KONKURENTNOST
 # #
+
+def relevantni_zakoni():
+    import re
+    # List of strings to search for in the 'opis' field
+    search_strings = [
+        "O ELEKTRONSKOM FAKTURISANJU",
+        "O ROKOVIMA IZMIRENJA NOVČANIH OBAVEZA U KOMERCIJALNIM TRANSAKCIJAMA",
+        "O POREZU NA DOBIT PRAVNIH LICA",
+        "O PRIVREDNIM DRUŠTVIMA",
+        "O ZAPOŠLJAVANJU I OSIGURANJU ZA SLUČAJ NEZAPOSLENOSTI",
+        "O OBLIGACIONIM ODNOSIMA",
+        "O Privremenom registru majki i drugih lica",
+    ]
+
+    opis = None
+    websajt = None
+
+    extracted_data = []
+
+    # Open and read the text file
+    with open('filtered_PARLAMENT.txt', 'r', encoding='utf-8') as file:
+        lines = file.readlines()
+
+    # Iterate through the lines and extract website links if the search strings are found
+    # Iterate through the lines and extract website links
+    for line in lines:
+        if "opis:" in line:
+            parts = line.strip().split("websajt:")
+            if len(parts) == 2:
+                opis = parts[0].strip()[5:]  # Extract 'opis' field
+                websajt = parts[1].strip()  # Extract 'websajt' field
+
+                # Check if any search string is present in the 'opis' field (case-insensitive)
+                if any(search_string.lower() in opis.lower() for search_string in search_strings):
+                    extracted_data.append((opis, websajt))
+
+    # Print the extracted website links
+    with open('extracted_filter.txt', 'w', encoding='utf-8') as output_file:
+        for opis, websajt in extracted_data:
+            output_file.write(f'opis: {opis} websajt: {websajt}\n')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+relevantni_zakoni()
