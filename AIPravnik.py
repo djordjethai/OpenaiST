@@ -124,7 +124,7 @@ def main():
                     Program prikuplja nove zakone ili izmene zakona sa sajtova Paragraf i Parlament, a iz liste zakona koji su objavljeni u željenom periodu i pripadaju listi zakona od interesa radi sažetak. Zatim linkove sa zakonima i sažetke šalje na email po izboru.
                     Treba rešiti: Zašto se čitaju dva sajta, tj šta ako su isti zakoni?
                     Treba rešiti: Koji period ili broj zakona se čita? Kako postaviti filtere?
-                    Tehničko pitanje: ya sada program čuva tekstove u fajlove, da li je moguće da se čuvaju u varijable?
+                    Tehničko pitanje: za sada program čuva tekstove u fajlove, da li je moguće da se čuvaju u varijable?
                     """
             )
     with st.form("mail_form"):
