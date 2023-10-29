@@ -8,6 +8,8 @@ from langchain.tools.gmail.utils import build_resource_service, get_gmail_creden
 import requests
 from bs4 import BeautifulSoup
 from pravnik_fukncije import dl_paragraf, dl_parlament, lista_zakona, sumiraj_zakone
+from myfunc.mojafunkcija import positive_login
+import os
 
 
 # prikuplja podatke o zakonima sa sajtova i salje mail obavestenja sa linkovima na izmene i dopune zakona
@@ -156,6 +158,11 @@ def main():
                     posalji_mail(uputstvo)
                     st.success("Poslat email, obrada je završena")
 
+# Deployment on Stremalit Login functionality
+deployment_environment = os.environ.get("DEPLOYMENT_ENVIRONMENT")
 
-if __name__ == "__main__":
-    main()
+if deployment_environment == "Streamlit":
+    name, authentication_status, username = positive_login(main, " ")
+else:
+    if __name__ == "__main__":
+        main()
