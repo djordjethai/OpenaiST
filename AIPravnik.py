@@ -71,8 +71,8 @@ def procitaj_paragraf():
                                 i +=1 
                                
                                 link = "https://www.paragraf.rs/izmene_i_dopune/" + href.replace(" ", "%20")
-                                ime_fajla = dl_paragraf(link)
-                                suma = sumiraj_zakone(ime_fajla, description)
+                                full_text = dl_paragraf(link)
+                                suma = sumiraj_zakone(full_text, description)
                                 izvestaj = f"Sa sajta {url} sumiram zakon sa linka {link} \n\n Evo i krakog pregleda zakona: \n\n {suma}" 
                                 return izvestaj
                              

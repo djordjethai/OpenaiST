@@ -6,6 +6,9 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.chains.summarize import load_summarize_chain
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import PromptTemplate
+import io
+import docx
+import PyPDF2
 
 def dl_paragraf(url):
    
@@ -32,14 +35,10 @@ def dl_paragraf(url):
 
         # Join the list of text into a single string, separating paragraphs with newlines
         full_text = '\n'.join(text_content)
-        with open("temp.txt", "w", encoding="utf-8") as file:
-    # Write the string to the file
-            file.write(full_text)
     else:
         st.error("Failed to retrieve the web page.")
-        full_text = " "
-
-    return "temp.txt"
+        
+    return full_text
 
 def dl_parlament(url):
      
@@ -47,22 +46,31 @@ def dl_parlament(url):
 
     if response.status_code == 200:
         ime_fajla = url.rsplit('/', 1)[-1]
-        
-        # ovo zameniti sa ucitavanjem fajla u varijablu
-        with open(ime_fajla, "wb") as pdf_file:
-            pdf_file.write(response.content)
-        return ime_fajla
+        if "pdf" in ime_fajla:
+            full_text = pdf_from_web(url)
+        elif "docx" in ime_fajla:
+            full_text = docx_from_web(url)
+        else:
+            st.error("Failed to retrieve the web page.")
+            full_text = " "
+        # with open("temp.txt", "w", encoding="utf-8") as file:
+        #     # Write the string to the file
+        #     file.write(full_text)
     else:
         st.error(f"Failed to download the file {ime_fajla}")
 
+    return full_text
+    
 
 # izradjuje sumarizaciju zakona
-def sumiraj_zakone(ime_fajla, zakon):
-
+def sumiraj_zakone(full_text, zakon):
+    from langchain.schema import Document
+    doc = Document(page_content=full_text)
+    
     st.info("Sumiram zakon: " + zakon)
     # Loading the text document
-    loader = UnstructuredFileLoader(ime_fajla, encoding="utf-8")    
-    text_doc = loader.load()
+    #loader = UnstructuredFileLoader(doc, encoding="utf-8")    
+    #text_doc = loader.load()
     
     # Initializing ChatOpenAI model
     llm = ChatOpenAI(
@@ -75,9 +83,12 @@ def sumiraj_zakone(ime_fajla, zakon):
          chunk_size=chunk_size, chunk_overlap=chunk_overlap
       ) 
     
+    doc = Document(page_content=full_text)
+    print(type(doc))
     # Splitting the loaded text into smaller chunks
-    docs = text_splitter.split_documents(text_doc)
-   
+    docs = text_splitter.split_documents([doc])
+    
+    
     # promptovi za prvu i drugu fazu sumarizacije
     prompt_string_pocetak = """
         Uradi kratki summary na srpskom jeziku. Posebno istakni delove vezane za IT i računare
@@ -157,3 +168,26 @@ def lista_zakona():
     ]
 
     return search_strings
+
+def pdf_from_web(url):
+    response = requests.get(url, stream=True)
+
+    with io.BytesIO(response.content) as f:
+        pdf_reader = PyPDF2.PdfReader(f)
+        text_stream = io.StringIO()
+        for page in pdf_reader.pages:
+            text_stream.write(page.extract_text())
+    return text_stream.getvalue()
+
+
+def docx_from_web(url):
+    response = requests.get(url, stream=True)
+
+    with io.BytesIO(response.content) as f:
+        document = docx.Document(f)
+        text_stream = io.StringIO()
+        for para in document.paragraphs:
+            text_stream.write(para.text)
+            text_stream.write('\n')
+    return text_stream.getvalue()
+
