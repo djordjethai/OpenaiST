@@ -77,7 +77,7 @@ def procitaj_paragraf():
                                 return izvestaj
                              
 
-# skida zakone sa sajta parlament.gov.rs
+# skida zakone sa sajta parlament.gov.rs                                                                                                                         
 def procitaj_parlament():
     
     # URL of the webpage you want to scrape
@@ -125,9 +125,9 @@ def main():
                 """
                     Program prikuplja nove zakone ili izmene zakona sa sajtova Paragraf i Parlament, a iz liste zakona koji su objavljeni u željenom periodu i pripadaju listi zakona od interesa radi sažetak. Zatim linkove sa zakonima i sažetke šalje na email po izboru.
                     Treba rešiti: Zašto se čitaju dva sajta, tj šta ako su isti zakoni?
-                    Treba rešiti: Koji period ili broj zakona se čita? Kako postaviti filtere?
-                    Tehničko pitanje: za sada program čuva tekstove u fajlove, da li je moguće da se čuvaju u varijable?
-                    Kasnije: Da se email šalje sa positive.rs naloga tj da se koristi Outlook i office365
+                    Treba rešiti: Koji period ili broj zakona se čita?
+                    Tehničko pitanje: Da se email šalje sa positive.rs naloga tj da se koristi Outlook i office365
+                    Tehničko pitanje: Kako postaviti filtere?
                     """
             )
     with st.form("mail_form"):
