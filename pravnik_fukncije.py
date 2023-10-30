@@ -53,9 +53,6 @@ def dl_parlament(url):
         else:
             st.error("Failed to retrieve the web page.")
             full_text = " "
-        # with open("temp.txt", "w", encoding="utf-8") as file:
-        #     # Write the string to the file
-        #     file.write(full_text)
     else:
         st.error(f"Failed to download the file {ime_fajla}")
 
@@ -83,12 +80,12 @@ def sumiraj_zakone(full_text, zakon):
          chunk_size=chunk_size, chunk_overlap=chunk_overlap
       ) 
     
+    # pravi dokument od teksta neophodno za rad summarization chaina
     doc = Document(page_content=full_text)
-    print(type(doc))
+    
     # Splitting the loaded text into smaller chunks
     docs = text_splitter.split_documents([doc])
-    
-    
+        
     # promptovi za prvu i drugu fazu sumarizacije
     prompt_string_pocetak = """
         Uradi kratki summary na srpskom jeziku. Posebno istakni delove vezane za IT i računare
@@ -113,7 +110,7 @@ def sumiraj_zakone(full_text, zakon):
             template=prompt_string_kraj, input_variables=["text"]
         )  # Creating a prompt template object
 
-    
+    # summarization chain map reduce
     chain = load_summarize_chain(
         llm,
         chain_type="map_reduce",
@@ -169,6 +166,7 @@ def lista_zakona():
 
     return search_strings
 
+# skida pdf sa weba i stavlja u string
 def pdf_from_web(url):
     response = requests.get(url, stream=True)
 
@@ -179,7 +177,7 @@ def pdf_from_web(url):
             text_stream.write(page.extract_text())
     return text_stream.getvalue()
 
-
+# skida docx sa weba i stavlja u string
 def docx_from_web(url):
     response = requests.get(url, stream=True)
 
@@ -190,4 +188,3 @@ def docx_from_web(url):
             text_stream.write(para.text)
             text_stream.write('\n')
     return text_stream.getvalue()
-
