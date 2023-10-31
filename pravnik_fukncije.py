@@ -114,7 +114,7 @@ def sumiraj_zakone(full_text, zakon):
     chain = load_summarize_chain(
         llm,
         chain_type="map_reduce",
-        verbose=True,
+        verbose=False,
         map_prompt=PROMPT,
         combine_prompt=PROMPT_pam,
         token_max=4000,
@@ -161,7 +161,7 @@ def lista_zakona():
         " O INSPEKCIJSKOM NADZORU",
         " O KOLIČINI RASHODA (KALO, RASTUR, KVAR I LOM) NA KOJI SE NE PLAĆA AKCIZA",
         " O OBRAZOVANJU SAVETA ZA MALA I SREDNJA PREDUZEĆA, PREDUZETNIŠTVO I KONKURENTNOST",
-        
+               
     ]
 
     return search_strings

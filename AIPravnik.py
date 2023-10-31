@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 from pravnik_fukncije import dl_paragraf, dl_parlament, lista_zakona, sumiraj_zakone
 from myfunc.mojafunkcija import positive_login
 import os
+import time
 
 
 # prikuplja podatke o zakonima sa sajtova i salje mail obavestenja sa linkovima na izmene i dopune zakona
@@ -66,10 +67,7 @@ def procitaj_paragraf():
                     for zakon in mojalista_zakona:
                         if zakon.lower() in description.lower():
                             # privremeno samo da vidim da li radi
-                            i = 0
-                            for i  in range(2): 
-                                i +=1 
-                               
+                        
                                 link = "https://www.paragraf.rs/izmene_i_dopune/" + href.replace(" ", "%20")
                                 full_text = dl_paragraf(link)
                                 suma = sumiraj_zakone(full_text, description)
@@ -91,43 +89,51 @@ def procitaj_parlament():
         # Parse the HTML content of the webpage
         encoding = response.encoding if 'charset' in response.headers.get('content-type', '').lower() else None
         soup = BeautifulSoup(response.content, 'html.parser', from_encoding=encoding)
+        
         # Find all the <li> elements with class "td"
-        li_elements = soup.find_all('td')
+        tr_elements = soup.find_all('tr')
         # Iterate through the <li> elements and extract the href attribute from the <a> tags within them
-        for li in li_elements:
-            link = li.find('a')
-            if link:
+        izvestaj = ""
+
+        for tr in tr_elements:
+            link = tr.find('a')
+            datum = tr.get_text()  # Assuming the date is in the <tr> element text
+
+            if link and ("septembar 2023" in datum or "jul 2023" in datum):
                 href = link.get('href')
                 description = link.get_text()
+
                 if href and description:
                     mojalista_zakona = lista_zakona()
                     # samo relevantni zakoni
+                    matching_zakoni = []
+
                     for zakon in mojalista_zakona:
                         if zakon.lower() in description.lower():
-                            # privremeno samo da vidim da li radi
-                            i = 0
-                            for i  in range(2): 
-                                i +=1
-                                
-                                link = "http://www.parlament.gov.rs" + href.replace(" ", "%20") 
-                                ime_fajla = dl_parlament(link)
-                                suma = sumiraj_zakone(ime_fajla, description)
-                                izvestaj = f"Sa sajta {url} sumiram zakon sa linka {link} \n\n Evo i krakog pregleda zakona: \n\n {suma}" 
-                                return izvestaj
+                            link = "http://www.parlament.gov.rs" + href.replace(" ", "%20")
+
+                            # Perform your desired action with the matching link
+                            ime_fajla = dl_parlament(link)
+                            suma = sumiraj_zakone(ime_fajla, description)
+                            izvestaj += f"Sa sajta {url} sumiram zakon sa linka {link} \n\n Evo i krakog pregleda zakona: \n\n {suma} \n\n"
+
+        return izvestaj
+
+
+
+
     
 # prima ceo tekst maila, sa sve linkovima i sa sezecima
 def main():
 
     st.title("AI Asistent Pravnik - Praćenje zakona")
-    st.caption("Ver 29.10.23")
+    st.caption("Ver 31.10.23")
     with st.expander("Pročitajte uputstvo:", expanded=True):
             st.caption(
                 """
                     Program prikuplja nove zakone ili izmene zakona sa sajtova Paragraf i Parlament, a iz liste zakona koji su objavljeni u željenom periodu i pripadaju listi zakona od interesa radi sažetak. Zatim linkove sa zakonima i sažetke šalje na email po izboru.
-                    Treba rešiti: Zašto se čitaju dva sajta, tj šta ako su isti zakoni?
-                    Treba rešiti: Koji period ili broj zakona se čita?
                     Tehničko pitanje: Da se email šalje sa positive.rs naloga tj da se koristi Outlook i office365
-                    Tehničko pitanje: Kako postaviti filtere?
+                    Za kasnije: Kako postaviti filtere i cron job?
                     """
             )
     with st.form("mail_form"):
@@ -136,28 +142,30 @@ def main():
         submit_button = st.form_submit_button(label='Počni program')        
 
         # Every form must have a submit button.
+        suma_parlament = ""
         if submit_button:
             with st.spinner("Obradjujem ..."):
-                with placeholder:
+                 with placeholder:
                     st.info("Prikupljam zakone")
-                    suma_paragraf = procitaj_paragraf()
-                    suma_parlament = procitaj_parlament()
-                    text_maila = suma_paragraf + "\n\n" + suma_parlament
-                    # ovde treba lepo uobliciti email ono gore moze samo statruj program
-                    uputstvo = f"""
-                    Create a draft email to djordje.medakovic@gmail.com with a subject Novi Zakoni. Do not send it. Tekst maila mora da bude tačno ovakav bez ikakvih promena: 
+                    text_maila = procitaj_parlament()
+                    if len(text_maila ) > 3:
+                        uputstvo = f"""
+                        Create a draft email to vladimir.siska@positive.rs with a subject Novi Zakoni. Do not send it. Tekst maila mora da bude tačno ovakav bez ikakvih promena: 
                     
-                    Evo izveštaja o novim zakonima: 
+                        Evo izveštaja o novim zakonima: 
 
-                        {text_maila} 
+                            {text_maila} 
                         
-                    Srdačan pozdrav,             
-                    """             
+                        Srdačan pozdrav,             
+                        """             
                
-                    st.info("Šaljem mail")    
-                    posalji_mail(uputstvo)
-                    st.success("Poslat email, obrada je završena")
-
+                        st.info("Šaljem mail")    
+                        posalji_mail(uputstvo)
+                        # st.write (text_maila)
+                        st.success("Poslat email, obrada je završena")
+                    else:
+                        st.error("Nema novih zakona")
+            
 # Deployment on Stremalit Login functionality
 deployment_environment = os.environ.get("DEPLOYMENT_ENVIRONMENT")
 
