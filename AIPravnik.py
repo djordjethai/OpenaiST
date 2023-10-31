@@ -31,7 +31,7 @@ def posalji_mail(uputstvo):
     toolkit = GmailToolkit(api_resource=api_resource)
 
     # mora se definisati prompt template da bismo prosledili sve linkove i sazetke
-    llm = ChatOpenAI(temperature=0)
+    llm = ChatOpenAI(model_name = "gpt-3.5-turbo-16k", temperature=0)
     agent = initialize_agent(
         tools=toolkit.get_tools(),
         llm=llm,
