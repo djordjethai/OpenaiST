@@ -7,10 +7,10 @@ from langchain.agents.agent_toolkits import GmailToolkit
 from langchain.tools.gmail.utils import build_resource_service, get_gmail_credentials
 import requests
 from bs4 import BeautifulSoup
-from pravnik_fukncije import dl_paragraf, dl_parlament, lista_zakona, sumiraj_zakone
+from pravnik_fukncije import dl_paragraf, dl_parlament, lista_zakona, sumiraj_zakone, parse_serbian_date
 from myfunc.mojafunkcija import positive_login
 import os
-import time
+from datetime import date
 
 
 # prikuplja podatke o zakonima sa sajtova i salje mail obavestenja sa linkovima na izmene i dopune zakona
@@ -71,7 +71,7 @@ def procitaj_paragraf():
                                 link = "https://www.paragraf.rs/izmene_i_dopune/" + href.replace(" ", "%20")
                                 full_text = dl_paragraf(link)
                                 suma = sumiraj_zakone(full_text, description)
-                                izvestaj = f"Sa sajta {url} sumiram zakon sa linka {link} \n\n Evo i krakog pregleda zakona: \n\n {suma}" 
+                                izvestaj = f"Sa sajta {url} sumiram zakon sa linka {link} \n\n Evo i krakog pregleda zakona {description}: \n\n {suma} \n\n" 
                                 return izvestaj
                              
 
@@ -98,16 +98,19 @@ def procitaj_parlament():
         for tr in tr_elements:
             link = tr.find('a')
             datum = tr.get_text()  # Assuming the date is in the <tr> element text
+            
+            # ovde cemo prvo da konvertujemo datum u date format i onda da proverimo da li je today()-2
+            # datum_zakona = parse_serbian_date(datum) # mora da se pretvori format datuma i izvadi iz strringa koji sadrzi svasta
+            #if link and datum_zakona >= date.today()-2:
 
-            if link and ("septembar 2023" in datum or "jul 2023" in datum):
+            if link and "oktobar 2023" in datum:
                 href = link.get('href')
                 description = link.get_text()
 
                 if href and description:
                     mojalista_zakona = lista_zakona()
                     # samo relevantni zakoni
-                    matching_zakoni = []
-
+                    
                     for zakon in mojalista_zakona:
                         if zakon.lower() in description.lower():
                             link = "http://www.parlament.gov.rs" + href.replace(" ", "%20")

@@ -9,6 +9,7 @@ from langchain.prompts import PromptTemplate
 import io
 import docx
 import PyPDF2
+from datetime import datetime
 
 def dl_paragraf(url):
    
@@ -161,7 +162,7 @@ def lista_zakona():
         " O INSPEKCIJSKOM NADZORU",
         " O KOLIČINI RASHODA (KALO, RASTUR, KVAR I LOM) NA KOJI SE NE PLAĆA AKCIZA",
         " O OBRAZOVANJU SAVETA ZA MALA I SREDNJA PREDUZEĆA, PREDUZETNIŠTVO I KONKURENTNOST",
-               
+                    
     ]
 
     return search_strings
@@ -188,3 +189,32 @@ def docx_from_web(url):
             text_stream.write(para.text)
             text_stream.write('\n')
     return text_stream.getvalue()
+
+
+
+# pretvara datum string sa sajta u date objekat
+def parse_serbian_date(date_string):
+    serbian_month_names = {
+        "januar": "January",
+        "februar": "February",
+        "mart": "March",
+        "april": "April",
+        "maj": "May",
+        "jun": "June",
+        "jul": "July",
+        "avgust": "August",
+        "septembar": "September",
+        "oktobar": "October",
+        "novembar": "November",
+        "decembar": "December"
+    }
+
+    date_string = date_string.lower()
+
+    for serbian_month, english_month in serbian_month_names.items():
+        date_string = date_string.replace(serbian_month, english_month)
+
+    date_string = date_string.strip()
+
+    date_obj = datetime.strptime(date_string, "%d. %B %Y")
+    return date_obj
