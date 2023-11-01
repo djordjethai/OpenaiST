@@ -88,7 +88,7 @@ def procitaj_parlament():
                 except ValueError:
                     pass
             
-            target_date = date.today() - timedelta(days=7)
+            target_date = date.today() - timedelta(days=2)
             
             if link and date_obj > target_date:
 
@@ -121,9 +121,13 @@ def procitaj_parlament():
     
 # prima ceo tekst maila, sa sve linkovima i sa sezecima
 def main():
-
-    print("Ver 01.11.23 - local")
-    print("Prikupljam zakone")
+    print(" ")
+    print("------------------------------------------------------------------------------------------------")
+    print(" ")
+    print("AI Pravnik - Ver 01.11.23 - local")
+    print(" ")
+    print("------------------------------------------------------------------------------------------------")
+    print(" ")
     text_maila = procitaj_parlament()
     if len(text_maila ) > 3:
         uputstvo = f"""
@@ -150,8 +154,12 @@ def main():
         print(" ")
         print("------------------------------------------------------------------------------------------------")
     else:
-
+        print("------------------------------------------------------------------------------------------------")
+        print(" ")
         print("NEMA NOVIH ZAKONA")
+        print(" ")
+        print("------------------------------------------------------------------------------------------------")
+        
             
 if __name__ == "__main__":
     main()
