@@ -1,5 +1,5 @@
 import requests
-import streamlit as st
+# import streamlit as st
 from bs4 import BeautifulSoup
 from langchain.document_loaders import UnstructuredFileLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -37,9 +37,9 @@ def dl_paragraf(url):
         # Join the list of text into a single string, separating paragraphs with newlines
         full_text = '\n'.join(text_content)
     else:
-        st.error("Failed to retrieve the web page.")
+        # st.error("Failed to retrieve the web page.")
         
-    return full_text
+        return full_text
 
 def dl_parlament(url):
      
@@ -52,10 +52,10 @@ def dl_parlament(url):
         elif "docx" in ime_fajla:
             full_text = docx_from_web(url)
         else:
-            st.error("Failed to retrieve the web page.")
+            # st.error("Failed to retrieve the web page.")
             full_text = " "
-    else:
-        st.error(f"Failed to download the file {ime_fajla}")
+    # else:
+        #st.error(f"Failed to download the file {ime_fajla}")
 
     return full_text
     
@@ -65,7 +65,7 @@ def sumiraj_zakone(full_text, zakon):
     from langchain.schema import Document
     doc = Document(page_content=full_text)
     
-    st.info("Sumiram zakon: " + zakon)
+    # st.info("Sumiram zakon: " + zakon)
     # Loading the text document
     #loader = UnstructuredFileLoader(doc, encoding="utf-8")    
     #text_doc = loader.load()
