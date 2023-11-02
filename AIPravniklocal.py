@@ -14,6 +14,7 @@ import locale
 
 # Set the locale to Serbian
 locale.setlocale(locale.LC_TIME, 'sr_RS.utf8')
+# locale.setlocale(locale.LC_TIME, 'sr_RS.utf8@latin')  # za nas linux !!!
 
 
 # prikuplja podatke o zakonima sa sajtova i salje mail obavestenja sa linkovima na izmene i dopune zakona
