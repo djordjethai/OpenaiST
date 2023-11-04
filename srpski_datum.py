@@ -1,4 +1,4 @@
-﻿from datetime import datetime
+from datetime import datetime
 
 def parse_serbian_date(date_string):
     serbian_month_names = {
