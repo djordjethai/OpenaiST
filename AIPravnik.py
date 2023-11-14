@@ -49,8 +49,8 @@ def posalji_mail(uputstvo):
         smtp_server="smtp.office365.com",  # Replace with your SMTP server
         smtp_port=587,  # Replace with your SMTP port
         username="nemanja.perunicic@positive.rs",  # Replace with your SMTP username
-        password="CrimsonRed_1"  # Replace with your SMTP password
-    )
+        password="ubaci_sifru"  # Replace with your SMTP password
+        )
     
 
 # skida zakone sa sajta paragraf.rs
