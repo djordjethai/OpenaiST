@@ -35,7 +35,7 @@ def posalji_mail(uputstvo):
         subject=f"Izveštaj o novim zakonima - {date.today()}",
         message=uputstvo,
         from_addr="nemanja.perunicic@positive.rs",
-        to_addr="djordje.medakovic@positive.rs",
+        to_addr="nemanja.perunicic@positive.rs",
         smtp_server="smtp.office365.com",
         smtp_port=587,
         username="nemanja.perunicic@positive.rs",
