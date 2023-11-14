@@ -1,20 +1,16 @@
 # AI Asistent Pravnik - Pracenje zakona
-from langchain.agents import initialize_agent, AgentType
-from langchain.chat_models import ChatOpenAI
-from langchain.agents.agent_types import AgentType
-from langchain.agents.agent_toolkits import GmailToolkit
-from langchain.tools.gmail.utils import build_resource_service, get_gmail_credentials
-import requests
+from requests import get
 from bs4 import BeautifulSoup
-from pravnik_fukncije import dl_paragraf, dl_parlament, lista_zakona, sumiraj_zakone, parse_serbian_date
-from myfunc.mojafunkcija import positive_login
-import re
+from pravnik_fukncije import dl_parlament, lista_zakona, sumiraj_zakone, parse_serbian_date
+from re import search
 from datetime import date, datetime, timedelta
-import locale
-
+from locale import setlocale, LC_TIME
+from smtplib import SMTP
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 # Set the locale to Serbian
-locale.setlocale(locale.LC_TIME, 'sr_RS.utf8')
-# locale.setlocale(locale.LC_TIME, 'sr_RS.utf8@latin')  # za nas linux !!!
+setlocale(LC_TIME, 'sr_RS.utf8')
+# setlocale(LC_TIME, 'sr_RS.utf8@latin')  # za nas linux !!!
 
 
 # prikuplja podatke o zakonima sa sajtova i salje mail obavestenja sa linkovima na izmene i dopune zakona
@@ -22,27 +18,32 @@ locale.setlocale(locale.LC_TIME, 'sr_RS.utf8')
 #	http://www.parlament.gov.rs/akti/doneti-zakoni/doneti-zakoni.1033.html  
 
 
-# salje mail sa gmail accounta, unosi se uputsvo, moze da se automatizuje da cita iz fajla, preraditi na Outlook
 def posalji_mail(uputstvo):
-        
-    toolkit = GmailToolkit()
-    credentials = get_gmail_credentials(
-        token_file="token.json",
-        scopes=["https://mail.google.com/"],
-        client_secrets_file="credentials.json",
-    )
-    api_resource = build_resource_service(credentials=credentials)
-    toolkit = GmailToolkit(api_resource=api_resource)
+    def send_email(subject, message, from_addr, to_addr, smtp_server, smtp_port, username, password):
+        msg = MIMEMultipart()
+        msg['From'] = from_addr
+        msg['To'] = to_addr
+        msg['Subject'] = subject
 
-    # mora se definisati prompt template da bismo prosledili sve linkove i sazetke
-    llm = ChatOpenAI(model_name = "gpt-3.5-turbo-16k", temperature=0)
-    agent = initialize_agent(
-        tools=toolkit.get_tools(),
-        llm=llm,
-        agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
-    )
-    
-    agent.run(uputstvo)
+        msg.attach(MIMEText(message, 'plain'))
+
+        server = SMTP(smtp_server, smtp_port)
+        server.starttls()
+        server.login(username, password)
+        text = msg.as_string()
+        server.sendmail(from_addr, to_addr, text)
+        server.quit()
+
+    send_email(
+        subject=f"Izveštaj o novim zakonima - {date.today()}",
+        message=uputstvo,
+        from_addr="nemanja.perunicic@positive.rs",
+        to_addr="djordje.medakovic@positive.rs",
+        smtp_server="smtp.office365.com",
+        smtp_port=587,
+        username="nemanja.perunicic@positive.rs",
+        password="CrimsonRed_1"
+        )
     
 
 
@@ -53,7 +54,7 @@ def procitaj_parlament():
     url = 'http://www.parlament.gov.rs/akti/doneti-zakoni/doneti-zakoni.1033.html' 
     suma = ""
     # Send a GET request to the webpage
-    response = requests.get(url)
+    response = get(url)
 
     # Check if the request was successful
     if response.status_code == 200:
@@ -80,7 +81,7 @@ def procitaj_parlament():
                         datum = td_nowrap.get_text()
 
             pattern = r'\d{1,2}\.\s\w+\s\d{4}'
-            match = re.search(pattern, datum)
+            match = search(pattern, datum)
 
             if match:
                 date_str = match.group(0)  # Get the matched date string
@@ -132,14 +133,13 @@ def main():
     text_maila = procitaj_parlament()
     if len(text_maila ) > 3:
         uputstvo = f"""
-        Create a draft email to vladimir.siska@positive.rs with a subject Novi Zakoni. Do not send it. Tekst maila mora da bude tačno ovakav bez ikakvih promena: 
-                    
-        Evo izveštaja o novim zakonima: 
+Poštovani,           
+Evo izveštaja o novim zakonima: 
 
-            {text_maila} 
+{text_maila} 
                         
-        Srdačan pozdrav,             
-        """             
+Srdačan pozdrav,             
+"""             
                
         print(" ")
         print("------------------------------------------------------------------------------------------------")

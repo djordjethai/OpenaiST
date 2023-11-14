@@ -1,30 +1,21 @@
 # AI Asistent Pravnik - Pracenje zakona
-from langchain.agents import initialize_agent, AgentType
-from langchain.chat_models import ChatOpenAI
-from langchain.agents.agent_types import AgentType
 import streamlit as st
-from langchain.agents.agent_toolkits import GmailToolkit
-from langchain.tools.gmail.utils import build_resource_service, get_gmail_credentials
-import requests
+from requests import get
 from bs4 import BeautifulSoup
-from pravnik_fukncije import dl_paragraf, dl_parlament, lista_zakona, sumiraj_zakone, parse_serbian_date
+from pravnik_fukncije import dl_paragraf, dl_parlament, lista_zakona, sumiraj_zakone
 from myfunc.mojafunkcija import positive_login
 import os
 from datetime import date
-
+from smtplib import SMTP
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 # prikuplja podatke o zakonima sa sajtova i salje mail obavestenja sa linkovima na izmene i dopune zakona
 #	https://www.paragraf.rs/izmene_i_dopune/
 #	http://www.parlament.gov.rs/akti/doneti-zakoni/doneti-zakoni.1033.html  
 
 
-# salje mail sa gmail accounta, unosi se uputsvo, moze da se automatizuje da cita iz fajla, preraditi na Outlook
 def posalji_mail(uputstvo):
-        
-    import smtplib
-    from email.mime.multipart import MIMEMultipart
-    from email.mime.text import MIMEText
-
     def send_email(subject, message, from_addr, to_addr, smtp_server, smtp_port, username, password):
         msg = MIMEMultipart()
         msg['From'] = from_addr
@@ -33,23 +24,22 @@ def posalji_mail(uputstvo):
 
         msg.attach(MIMEText(message, 'plain'))
 
-        server = smtplib.SMTP(smtp_server, smtp_port)
+        server = SMTP(smtp_server, smtp_port)
         server.starttls()
         server.login(username, password)
         text = msg.as_string()
         server.sendmail(from_addr, to_addr, text)
         server.quit()
 
-    # Example usage:
     send_email(
-        subject="Hello",
+        subject=f"Izveštaj o novim zakonima - {date.today()}",
         message=uputstvo,
         from_addr="nemanja.perunicic@positive.rs",
         to_addr="djordje.medakovic@positive.rs",
-        smtp_server="smtp.office365.com",  # Replace with your SMTP server
-        smtp_port=587,  # Replace with your SMTP port
-        username="nemanja.perunicic@positive.rs",  # Replace with your SMTP username
-        password="ubaci_sifru"  # Replace with your SMTP password
+        smtp_server="smtp.office365.com",
+        smtp_port=587,
+        username="nemanja.perunicic@positive.rs",
+        password="CrimsonRed_1"
         )
     
 
@@ -59,7 +49,7 @@ def procitaj_paragraf():
     url = 'https://www.paragraf.rs/izmene_i_dopune/'  
     suma = ""
     # Send a GET request to the webpage
-    response = requests.get(url)
+    response = get(url)
     
     # Check if the request was successful
     if response.status_code == 200:
@@ -94,7 +84,7 @@ def procitaj_parlament():
     url = 'http://www.parlament.gov.rs/akti/doneti-zakoni/doneti-zakoni.1033.html' 
     suma = ""
     # Send a GET request to the webpage
-    response = requests.get(url)
+    response = get(url)
 
     # Check if the request was successful
     if response.status_code == 200:
@@ -165,12 +155,13 @@ def main():
                     text_maila = procitaj_parlament()
                     if len(text_maila ) > 3:
                         uputstvo = f"""
-                        Evo izveštaja o novim zakonima: 
+Poštovani,
+Evo izveštaja o novim zakonima: 
 
-                            {text_maila} 
+{text_maila} 
                         
-                        Srdačan pozdrav,             
-                        """             
+Srdačan pozdrav,             
+"""             
                
                         st.info("Šaljem mail")    
                         posalji_mail(uputstvo)
