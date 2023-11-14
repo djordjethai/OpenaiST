@@ -104,8 +104,8 @@ def procitaj_parlament():
             # ovde cemo prvo da konvertujemo datum u date format i onda da proverimo da li je today()-2
             # datum_zakona = parse_serbian_date(datum) # mora da se pretvori format datuma i izvadi iz strringa koji sadrzi svasta
             #if link and datum_zakona >= date.today()-2:
-
-            if link and "oktobar 2023" in datum:
+            print(tr)
+            if link and "novembar 2023" in datum:
                 href = link.get('href')
                 description = link.get_text()
 
