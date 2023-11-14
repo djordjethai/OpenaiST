@@ -153,7 +153,7 @@ def main():
                     text_maila = procitaj_parlament()
                     if len(text_maila ) > 3:
                         uputstvo = f"""
-                        Create a draft email to vladimir.siska@positive.rs with a subject Novi Zakoni. Do not send it. Tekst maila mora da bude tačno ovakav bez ikakvih promena: 
+                        Create a draft email to nemanja.perunicic@positive.rs with a subject Novi Zakoni. Do not send it. Tekst maila mora da bude tačno ovakav bez ikakvih promena: 
                     
                         Evo izveštaja o novim zakonima: 
 
