@@ -39,7 +39,7 @@ def posalji_mail(uputstvo):
         smtp_server="smtp.office365.com",
         smtp_port=587,
         username="nemanja.perunicic@positive.rs",
-        password="CrimsonRed_1"
+        password="unesi sifru ovde"
         )
     
 
