@@ -21,24 +21,36 @@ from datetime import date
 # salje mail sa gmail accounta, unosi se uputsvo, moze da se automatizuje da cita iz fajla, preraditi na Outlook
 def posalji_mail(uputstvo):
         
-    toolkit = GmailToolkit()
-    credentials = get_gmail_credentials(
-        token_file="token.json",
-        scopes=["https://mail.google.com/"],
-        client_secrets_file="credentials.json",
-    )
-    api_resource = build_resource_service(credentials=credentials)
-    toolkit = GmailToolkit(api_resource=api_resource)
+    import smtplib
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
 
-    # mora se definisati prompt template da bismo prosledili sve linkove i sazetke
-    llm = ChatOpenAI(model_name = "gpt-3.5-turbo-16k", temperature=0)
-    agent = initialize_agent(
-        tools=toolkit.get_tools(),
-        llm=llm,
-        agent=AgentType.STRUCTURED_CHAT_ZERO_SHOT_REACT_DESCRIPTION,
+    def send_email(subject, message, from_addr, to_addr, smtp_server, smtp_port, username, password):
+        msg = MIMEMultipart()
+        msg['From'] = from_addr
+        msg['To'] = to_addr
+        msg['Subject'] = subject
+
+        msg.attach(MIMEText(message, 'plain'))
+
+        server = smtplib.SMTP(smtp_server, smtp_port)
+        server.starttls()
+        server.login(username, password)
+        text = msg.as_string()
+        server.sendmail(from_addr, to_addr, text)
+        server.quit()
+
+    # Example usage:
+    send_email(
+        subject="Hello",
+        message=uputstvo,
+        from_addr="nemanja.perunicic@positive.rs",
+        to_addr="djordje.medakovic@positive.rs",
+        smtp_server="smtp.office365.com",  # Replace with your SMTP server
+        smtp_port=587,  # Replace with your SMTP port
+        username="nemanja.perunicic@positive.rs",  # Replace with your SMTP username
+        password="CrimsonRed_1"  # Replace with your SMTP password
     )
-    
-    agent.run(uputstvo)
     
 
 # skida zakone sa sajta paragraf.rs
@@ -153,8 +165,6 @@ def main():
                     text_maila = procitaj_parlament()
                     if len(text_maila ) > 3:
                         uputstvo = f"""
-                        Create a draft email to nemanja.perunicic@positive.rs with a subject Novi Zakoni. Do not send it. Tekst maila mora da bude tačno ovakav bez ikakvih promena: 
-                    
                         Evo izveštaja o novim zakonima: 
 
                             {text_maila} 
