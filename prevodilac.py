@@ -25,7 +25,7 @@ from pydub import AudioSegment
 
 st_style()
 client = OpenAI()
-version = "28.11.23."
+version = "29.11.23."
 
 # glavni program odredjuje ulazni dokument i jezike za prevodjenje
 def main():
@@ -40,21 +40,23 @@ def main():
                        ### Korisničko Uputstvo za Prevodioca
 
 
-    1. **Učitavanje slike**
-       - Učitajte video (.mp4) koji želite da bude opisan.
-       - Odaberite opciju "Opis videa" ili "Glasovna naracija".
+    1. **Ulazni dokument**
+       - Odaberite jezik ulaznog dokumenta.
+       - Odaberite tip ulaznog dokumenta (tekst, audio, slika iz fajla, slika sa weba).
+       - Odaberije jezik izlaznog dokumenta
+       - Pritisnite Submit
+       - Učitajte fajl u odabranom formatu koji želite da prevedete. Za sliku i audio videćete i preview.
+       - Unesite uputstvo za prevodjenje ili prihvatite default opciju.
+       - Odaberite opciju "Glasovna naracija" po želji.
        
-    2. **Uputstvo**
-       - Korigujte uputsvo po potrebi.
-
-    3. **Generisanje opisa**
-       - Pritisnite dugme "Submit" kako biste pokrenuli proces opisivanja. Opis će se prikazati u prozoru "Opis videa". Takođe, možete preuzeti opis kao .txt.
-       - Ako korisatite opciju "Glasovna naracija", možete preuzeti i zvučni zapis opisa kao .mp3.
+    2. **Čuvanje**
+       - U levoj bočnoj traci možete sačuvati izlaz u txt, pdf ili docx formatu.
+       - Tonski zapis možete sačuvati na samom playeru, desno, tri tačke, download.
        
     **Napomena:**
     - Za transkribovanje zvučnih zapisa koristi se OpenAI Whisper model. Zvučni zapis mora biti u .MP3 formatu i ne veći od 25Mb.
-    - Za sažimanje teksta i citanje sa slika koristi se odgovarajući OpenAI GPT-4 model.
-    - Sve generisane datoteke možete preuzeti pomoću odgovarajućih dugmadi za preuzimanje u bočnoj traci.
+    - Za prevod teksta i citanje sa slika koristi se odgovarajući OpenAI GPT-4 model.
+    
 
     Srećno sa korišćenjem alata za prevodjenje!  
                        """
@@ -62,7 +64,9 @@ def main():
     
 
    
-   
+    if "final_content" not in st.session_state:
+        st.session_state["final_content"] = ""
+        
     st.subheader("Ulazni dokument")
     izbor_ulaza = ''
     with st.form(key="ulaz", clear_on_submit=False):
@@ -100,6 +104,7 @@ def read_url_image(jezik_izlaza):
                             do not correct any spelling and grammar errors. "
             
             upit = st.text_area("Unesite uputstvo ", default_text)
+            audio_i = st.checkbox("Glasovna naracija")
             submit_button = st.form_submit_button(label="Submit")
             if submit_button:
                 with st.spinner("Sačekajte trenutak..."):         
@@ -122,13 +127,16 @@ def read_url_image(jezik_izlaza):
                       max_tokens=300,
                     )
                     content = response.choices[0].message.content
-    
+                    if audio_i == True:
+                            st.write("Glasovna naracija")    
+                            audio_izlaz(content)
                     with st.expander("Opis slike"):
-                            st.write(content)
-    
+                        st.write(content)
+                        
+                    st.session_state["final_content"] = content
         with st.sidebar:      
-            if content !="":
-                sacuvaj_dokument(content, image_f, image_f.name, "txt")
+            if st.session_state.final_content !="":
+                sacuvaj_dokument(st.session_state.final_content, image_f.name)
     
 # cita sa slike iz fajla i prima jezik izlaza
 def read_local_image(jezik_izlaza):
@@ -157,9 +165,10 @@ def read_local_image(jezik_izlaza):
 
         with placeholder.form(key="my_image", clear_on_submit=False):
             default_text = f"What is in this image? Please read and reproduce the text in the {jezik_izlaza} language. Read the text as is, \
-                            do not correct any spelling and grammar errors. "
+do not correct any spelling and grammar errors. "
             
             upit = st.text_area("Unesite uputstvo ", default_text)  
+            audio_i = st.checkbox("Glasovna naracija")
             submit_button = st.form_submit_button(label="Submit")
             
             if submit_button:
@@ -198,13 +207,17 @@ def read_local_image(jezik_izlaza):
 
                     json_data = response.json()
                     content = json_data['choices'][0]['message']['content']
-
+                    if audio_i == True:
+                        st.write("Glasovna naracija")
+                        audio_izlaz(content)
                     with st.expander("Opis slike"):
                         st.write(content)
-         
+                    
+                    st.session_state["final_content"] = content        
         with st.sidebar:      
-            if content !="":
-                sacuvaj_dokument(content, image_f.name)
+            if st.session_state.final_content !="":
+                
+                sacuvaj_dokument(st.session_state.final_content, image_f.name)
                 
 # cita sa audio fajla i prima jezik ulaza i jezik izlaza
 def cita_audio(jezik_ulaza, jezik_izlaza):
@@ -220,25 +233,34 @@ def cita_audio(jezik_ulaza, jezik_izlaza):
         
        
     if audio_file is not None:
-        st.audio(audio_file.getvalue(), format="audio/mp3")
-        st.session_state["question"] = ""
-        st.subheader("Izlazni dokument")
-        with st.spinner("Sačekajte trenutak..."):
+        placeholder = st.empty()
+        # st.session_state["question"] = ""
+        with placeholder.form(key="my_image", clear_on_submit=False):
+            st.write("Ulazni audio fajl")
+            st.audio(audio_file.getvalue(), format="audio/mp3")
+            st.session_state["question"] = ""
+            st.write("Izlazni dokument")
+            default_text=f""" You are the {jezik_izlaza} language expert. You must translate the text to the {jezik_izlaza} language and fix grammar and spelling errors but otherwise keep the text as is, in the Serbian language. \
+Your task is to correct any spelling discrepancies in the transcribed text. \
+Only add necessary punctuation such as periods, commas, and capitalization, and use only the context provided. 
+"""
+            upit = st.text_area("Unesite uputstvo ", default_text)
+            audio_i = st.checkbox("Glasovna naracija")   
+            submit_button = st.form_submit_button(label="Submit")
+            if submit_button:
+                with st.spinner("Sačekajte trenutak..."):
+                # does transcription of the audio file and then corrects the transcript
+                    content = generate_corrected_transcript(upit, audio_file, jezik_ulaza)
+                    if audio_i == True:
+                        st.write("Glasovna naracija")
+                        audio_izlaz(content)
+                    with st.expander("Procitajte prevod", expanded = True):
+                        st.write(content)
                         
-            system_prompt=f"""
-            You are the {jezik_izlaza} language expert. You must translate the text to the {jezik_izlaza} language and fix grammar and spelling errors but otherwise keep the text as is, in the Serbian language. \
-            Your task is to correct any spelling discrepancies in the transcribed text. \
-            Only add necessary punctuation such as periods, commas, and capitalization, and use only the context provided. 
-            """
-            # does transcription of the audio file and then corrects the transcript
-            content = generate_corrected_transcript(system_prompt, audio_file, jezik_ulaza)
-            
-            with st.expander("Procitajte prevod", expanded = True):
-                st.write(content)
-       
-        with st.sidebar:      
-            if content !="":
-                sacuvaj_dokument(content, audio_file.name)            
+                    st.session_state["final_content"] = content
+                with st.sidebar:      
+                    if st.session_state.final_content !="":
+                        sacuvaj_dokument(st.session_state.final_content, audio_file.name)            
  
                           
 # transkribije audio fajl, prima ime fajla i jezik ulaza i vraca tekst
@@ -274,7 +296,6 @@ def generate_corrected_transcript(system_prompt, audio_file, jezik):
 # cuvaj dokument, prima tekst, ime fajla i cuva za download u txt, docx i pdf formatu
 def sacuvaj_dokument(content, file_name):
     st.info("Čuva dokument")
-    st.caption("Za sada samo po jednu vrstu, popravice Nemanja :-) je ne umem...")
     options = {
         "encoding": "UTF-8",  # Set the encoding to UTF-8
         "no-outline": None,
@@ -409,18 +430,18 @@ and spelling errors but otherwise keep the text as is.
                 )
 
                 content =  response.choices[0].message.content
-
-            if content != "Zapisnik":
-                    
-                with st.expander("Sažetak", True):
-                    # Generate the summary by running the chain on the input documents and store it in an AIMessage object
-                    st.write(content)  # Displaying the summary
+                st.session_state["final_content"] = content
+            if st.session_state.final_content != "Zapisnik":
                 if audio_i == True:
-                    audio_izlaz(content)
-                    
+                    st.write("Glasovna naracija")
+                    audio_izlaz(content)    
+                with st.expander("Sažetak", True):
+                    st.write(content)  # Displaying the summary
         with st.sidebar:      
-            if content !="":
-                sacuvaj_dokument(content, uploaded_file.name) 
+            if st.session_state.final_content !="":
+                st.session_state["final_content"] = content
+                sacuvaj_dokument(st.session_state.final_content, uploaded_file.name)
+                
                     
 
 # Deployment on Stremalit Login functionality
