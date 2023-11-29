@@ -330,7 +330,7 @@ def sacuvaj_dokument(content, file_name):
     )
 
 
-# cita tekst i prima jezik izlaza izlaz je mp3 player
+# cita tekst i upit a izlaz je mp3 player
 def audio_izlaz(content):
     response = requests.post(
         "https://api.openai.com/v1/audio/speech",
@@ -349,11 +349,11 @@ def audio_izlaz(content):
         audio += chunk
 
     # Convert the byte array to AudioSegment
-    audio_segment = AudioSegment.from_file(io.BytesIO(audio))
+    #audio_segment = AudioSegment.from_file(io.BytesIO(audio))
 
     # Save AudioSegment as MP3 file
-    mp3_data = io.BytesIO()
-    audio_segment.export(mp3_data, format="mp3")
+    mp3_data = io.BytesIO(audio)
+    #audio_segment.export(mp3_data, format="mp3")
     mp3_data.seek(0)
 
     # Display the audio using st.audio
