@@ -16,8 +16,6 @@
 slnx.sqlite
 *.JSONL
 *.zip
-/.vs/OpenaiST/FileContentIndex/8c0c4402-ea3f-4943-a7e9-4572d22c9002.vsidx
-/.vs/OpenaiST/FileContentIndex/d287e206-e57f-4ac9-8f38-46bf2636b608.vsidx
-/.vs/OpenaiST/FileContentIndex/e0effecb-1d7c-4f2e-b250-69a36d91e12c.vsidx
-/.vs/OpenaiST/FileContentIndex/f797a028-adeb-4a84-9278-76d5a4a43d55.vsidx
+*.vs
+*.pyc
 *.vsidx
