@@ -6,13 +6,14 @@
 from openai import OpenAI
 import streamlit as st
 import os
-import requests
-import base64
 import io
-from PIL import Image
 from myfunc.mojafunkcija import (
     st_style,
     positive_login,
+    read_url_image,
+    read_local_image,
+    generate_corrected_transcript,
+    audio_izlaz,
    )
 from html2docx import html2docx
 import markdown
@@ -20,12 +21,10 @@ import pdfkit
 import PyPDF2
 from langchain.document_loaders import UnstructuredFileLoader
 import re
-from pydub import AudioSegment
-
 
 st_style()
 client = OpenAI()
-version = "29.11.23."
+version = "19.12.23."
 
 # glavni program odredjuje ulazni dokument i jezike za prevodjenje
 def main():
@@ -85,140 +84,6 @@ def main():
         cita_audio(jezik_ulaza, jezik_izlaza)
          
    
-        
-        
-# cita sa slike sa url i prima jezik izlaza
-def read_url_image(jezik_izlaza):
-    # version url
-    
-    st.info("Čita sa slike sa URL")
-    content = ""
-    img_url = st.text_input("Unesite URL slike ")
-    
-    image_f = os.path.basename(img_url)   
-    if img_url !="":
-        st.image(img_url, width=150)
-        placeholder = st.empty()    
-        with placeholder.form(key="my_image_url", clear_on_submit=False):
-            default_text = f"What is in this image? Please read and reproduce the text in the {jezik_izlaza} language. Read the text as is, \
-                            do not correct any spelling and grammar errors. "
-            
-            upit = st.text_area("Unesite uputstvo ", default_text)
-            audio_i = st.checkbox("Glasovna naracija")
-            submit_button = st.form_submit_button(label="Submit")
-            if submit_button:
-                with st.spinner("Sačekajte trenutak..."):         
-                    response = client.chat.completions.create(
-                      model="gpt-4-vision-preview",
-                      messages=[
-                        {
-                          "role": "user",
-                          "content": [
-                            {"type": "text", "text": upit},
-                            {
-                              "type": "image_url",
-                              "image_url": {
-                                "url": img_url,
-                              },
-                            },
-                          ],
-                        }
-                      ],
-                      max_tokens=300,
-                    )
-                    content = response.choices[0].message.content
-                    if audio_i == True:
-                            st.write("Glasovna naracija")    
-                            audio_izlaz(content)
-                    with st.expander("Opis slike"):
-                        st.write(content)
-                        
-                    st.session_state["final_content"] = content
-        with st.sidebar:      
-            if st.session_state.final_content !="":
-                sacuvaj_dokument(st.session_state.final_content, image_f.name)
-    
-# cita sa slike iz fajla i prima jezik izlaza
-def read_local_image(jezik_izlaza):
-    # version local file
-    
-    st.info("Čita sa slike")
-    image_f = st.file_uploader(
-        "Odaberite sliku",
-        type="jpg",
-        key="slika_",
-        help="Odabir dokumenta",
-    )
-    content = ""
-  
-    
-    if image_f is not None:
-        base64_image = base64.b64encode(image_f.getvalue()).decode('utf-8')
-        # Decode the base64 image
-        image_bytes = base64.b64decode(base64_image)
-        # Create a PIL Image object
-        image = Image.open(io.BytesIO(image_bytes))
-        # Display the image using st.image
-        st.image(image, width=150)
-        placeholder = st.empty()
-        # st.session_state["question"] = ""
-
-        with placeholder.form(key="my_image", clear_on_submit=False):
-            default_text = f"What is in this image? Please read and reproduce the text in the {jezik_izlaza} language. Read the text as is, \
-do not correct any spelling and grammar errors. "
-            
-            upit = st.text_area("Unesite uputstvo ", default_text)  
-            audio_i = st.checkbox("Glasovna naracija")
-            submit_button = st.form_submit_button(label="Submit")
-            
-            if submit_button:
-                with st.spinner("Sačekajte trenutak..."):            
-                    # Path to your image
-                    api_key = os.getenv("OPENAI_API_KEY")
-                    # Getting the base64 string
-                    headers = {
-                      "Content-Type": "application/json",
-                      "Authorization": f"Bearer {api_key}"
-                    }
-
-                    payload = {
-                      "model": "gpt-4-vision-preview",
-                      "messages": [
-                        {
-                          "role": "user",
-                          "content": [
-                            {
-                              "type": "text",
-                              "text": upit
-                            },
-                            {
-                              "type": "image_url",
-                              "image_url": {
-                                "url": f"data:image/jpeg;base64,{base64_image}"
-                              }
-                            }
-                          ]
-                        }
-                      ],
-                      "max_tokens": 300
-                    }
-
-                    response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
-
-                    json_data = response.json()
-                    content = json_data['choices'][0]['message']['content']
-                    if audio_i == True:
-                        st.write("Glasovna naracija")
-                        audio_izlaz(content)
-                    with st.expander("Opis slike"):
-                        st.write(content)
-                    
-                    st.session_state["final_content"] = content        
-        with st.sidebar:      
-            if st.session_state.final_content !="":
-                
-                sacuvaj_dokument(st.session_state.final_content, image_f.name)
-                
 # cita sa audio fajla i prima jezik ulaza i jezik izlaza
 def cita_audio(jezik_ulaza, jezik_izlaza):
     # Read OpenAI API key from env
@@ -264,34 +129,17 @@ Only add necessary punctuation such as periods, commas, and capitalization, and 
  
                           
 # transkribije audio fajl, prima ime fajla i jezik ulaza i vraca tekst
-def transcribe(audio_file, jezik):
-    transcript = client.audio.transcriptions.create(
-                            model="whisper-1", 
-                            file=audio_file, 
-                            language=jezik, 
-                            response_format="text"
-    )
-    return transcript
+# def transcribe(audio_file, jezik):
+#     transcript = client.audio.transcriptions.create(
+#                             model="whisper-1", 
+#                             file=audio_file, 
+#                             language=jezik, 
+#                             response_format="text"
+#     )
+#     return transcript
 
 # koriguje sirovi transkript, prima sistemski prompt, audio fajl i jezik ulaza i vraca tekst
-def generate_corrected_transcript(system_prompt, audio_file, jezik):
-        
-    response = client.chat.completions.create(
-        model="gpt-4-1106-preview",
-        temperature=0,
-        messages=[
-            {
-                "role": "system",
-                "content": system_prompt
-            },
-            {
-                "role": "user",
-                "content": transcribe(audio_file, jezik) # does transcription of the audio file
-            }
-        ]
-    )
 
-    return response.choices[0].message.content
 
 # cuvaj dokument, prima tekst, ime fajla i cuva za download u txt, docx i pdf formatu
 def sacuvaj_dokument(content, file_name):
@@ -331,41 +179,14 @@ def sacuvaj_dokument(content, file_name):
 
 
 # cita tekst i upit a izlaz je mp3 player
-def audio_izlaz(content):
-    response = requests.post(
-        "https://api.openai.com/v1/audio/speech",
-        headers={
-            "Authorization": f"Bearer {os.environ['OPENAI_API_KEY']}",
-        },
-        json={
-            "model" : "tts-1-hd",
-            "voice" : "alloy",
-            "input": content,
-        
-        },
-    )    
-    audio = b""
-    for chunk in response.iter_content(chunk_size=1024 * 1024):
-        audio += chunk
 
-    # Convert the byte array to AudioSegment
-    #audio_segment = AudioSegment.from_file(io.BytesIO(audio))
-
-    # Save AudioSegment as MP3 file
-    mp3_data = io.BytesIO(audio)
-    #audio_segment.export(mp3_data, format="mp3")
-    mp3_data.seek(0)
-
-    # Display the audio using st.audio
-    st.caption("mp3 fajl možete download-ovati odabirom tri tačke ne desoj strani audio plejera")
-    st.audio(mp3_data.read(), format="audio/mp3")    
 
 # cita tekst i prevodi. Prima jezik izlaza i izlaz je prevedeni tekst
 def citaj_tekst(jezik_izlaza):
     
     st.info("Čita tekst")
     uploaded_file = st.file_uploader(
-        "Izaberite tekst za sumarizaciju",
+        "Izaberite tekst za prevod",
         key="upload_file",
         type=["txt", "pdf", "docx"],
         help = "Odabir dokumenta",
