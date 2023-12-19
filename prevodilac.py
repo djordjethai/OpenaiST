@@ -60,7 +60,7 @@ def main():
 
    
     if "final_content" not in st.session_state:
-        st.session_state["final_content"] = ""
+        st.session_state["final_content"] = "Prevod"
         
     st.subheader("Ulazni dokument")
     
@@ -118,7 +118,7 @@ def citaj_tekst(jezik_izlaza):
 
         result = loader.load()
                 
-        content = "Zapisnik"   
+      #  content = "Zapisnik"   
         with st.form(key="my_form", clear_on_submit=False):
             system_prompt=f"""You are a multi-lingual language expert. You must translate the text to the {jezik_izlaza} language and fix grammar \
 and spelling errors but otherwise keep the text as is. 
@@ -153,15 +153,15 @@ and spelling errors but otherwise keep the text as is.
 
                 content =  response.choices[0].message.content
                 st.session_state["final_content"] = content
-            if st.session_state.final_content != "Zapisnik":
+            if st.session_state.final_content != "Prevod":
                 if audio_i == True:
                     st.write("Glasovna naracija")
-                    audio_izlaz(content)    
+                    audio_izlaz(st.session_state.final_content)    
                 with st.expander("Sažetak", True):
-                    st.write(content)  # Displaying the summary
+                    st.write(st.session_state.final_content)  # Displaying the summary
         with st.sidebar:      
-            if st.session_state.final_content !="":
-                st.session_state["final_content"] = content
+            # if st.session_state.final_content !="Prevod":
+            #     st.session_state["final_content"] = content
                 sacuvaj_dokument(st.session_state.final_content, uploaded_file.name)
                 
                     
