@@ -10,14 +10,10 @@ import io
 from myfunc.mojafunkcija import (
     st_style,
     positive_login,
-    read_url_image,
-    read_local_image,
-    generate_corrected_transcript,
     audio_izlaz,
+    priprema,
+    sacuvaj_dokument,
    )
-from html2docx import html2docx
-import markdown
-import pdfkit
 import PyPDF2
 from langchain.document_loaders import UnstructuredFileLoader
 import re
@@ -40,8 +36,8 @@ def main():
 
 
     1. **Ulazni dokument**
+       - Po potrebi mozete konvertovati sliku ili audio zapis. Inace, mozete ucitati tekstualni dokument u .txt, .pdf ili .docx formatu.
        - Odaberite jezik ulaznog dokumenta.
-       - Odaberite tip ulaznog dokumenta (tekst, audio, slika iz fajla, slika sa weba).
        - Odaberije jezik izlaznog dokumenta
        - Pritisnite Submit
        - Učitajte fajl u odabranom formatu koji želite da prevedete. Za sliku i audio videćete i preview.
@@ -67,115 +63,20 @@ def main():
         st.session_state["final_content"] = ""
         
     st.subheader("Ulazni dokument")
-    izbor_ulaza = ''
+    
+    with st.sidebar:
+        priprema()
     with st.form(key="ulaz", clear_on_submit=False):
-        jezik_ulaza = st.selectbox("izaberite jezik ulaznog dokumenta", ("sr", "en", "fr", "de", "hu", "it", "es"))
-        izbor_ulaza = st.selectbox("Odaberite tip ulaznog dokumenta", ("Tekst", "Audio", "Slika iz fajla", "Slika sa weba" ))
+ 
         jezik_izlaza = st.selectbox("izaberite jezik izlaznog dokumenta", ("srpski", "english", "french", "german", "hungarian", "italian", "spanish"))    
         submit_button = st.form_submit_button(label="Submit")
-            
-    if izbor_ulaza == "Slika iz fajla":
-        read_local_image(jezik_izlaza)
-    elif izbor_ulaza == "Slika sa weba":
-        read_url_image(jezik_izlaza)
-    elif izbor_ulaza == "Tekst":
-        citaj_tekst(jezik_izlaza)
-    elif izbor_ulaza == "Audio":
-        cita_audio(jezik_ulaza, jezik_izlaza)
+         
+    citaj_tekst(jezik_izlaza)
          
    
-# cita sa audio fajla i prima jezik ulaza i jezik izlaza
-def cita_audio(jezik_ulaza, jezik_izlaza):
-    # Read OpenAI API key from env
-    st.info("Čita sa audio zapisa")
-    audio_file = st.file_uploader(
-        "Max 25Mb",
-        type="mp3",
-        key="audio_",
-        help="Odabir dokumenta",
-    )
-    content = ""
-        
-       
-    if audio_file is not None:
-        placeholder = st.empty()
-        # st.session_state["question"] = ""
-        with placeholder.form(key="my_image", clear_on_submit=False):
-            st.write("Ulazni audio fajl")
-            st.audio(audio_file.getvalue(), format="audio/mp3")
-            st.session_state["question"] = ""
-            st.write("Izlazni dokument")
-            default_text=f""" You are the {jezik_izlaza} language expert. You must translate the text to the {jezik_izlaza} language and fix grammar and spelling errors but otherwise keep the text as is, in the Serbian language. \
-Your task is to correct any spelling discrepancies in the transcribed text. \
-Only add necessary punctuation such as periods, commas, and capitalization, and use only the context provided. 
-"""
-            upit = st.text_area("Unesite uputstvo ", default_text)
-            audio_i = st.checkbox("Glasovna naracija")   
-            submit_button = st.form_submit_button(label="Submit")
-            if submit_button:
-                with st.spinner("Sačekajte trenutak..."):
-                # does transcription of the audio file and then corrects the transcript
-                    content = generate_corrected_transcript(upit, audio_file, jezik_ulaza)
-                    if audio_i == True:
-                        st.write("Glasovna naracija")
-                        audio_izlaz(content)
-                    with st.expander("Procitajte prevod", expanded = True):
-                        st.write(content)
-                        
-                    st.session_state["final_content"] = content
-                with st.sidebar:      
-                    if st.session_state.final_content !="":
-                        sacuvaj_dokument(st.session_state.final_content, audio_file.name)            
- 
                           
-# transkribije audio fajl, prima ime fajla i jezik ulaza i vraca tekst
-# def transcribe(audio_file, jezik):
-#     transcript = client.audio.transcriptions.create(
-#                             model="whisper-1", 
-#                             file=audio_file, 
-#                             language=jezik, 
-#                             response_format="text"
-#     )
-#     return transcript
-
-# koriguje sirovi transkript, prima sistemski prompt, audio fajl i jezik ulaza i vraca tekst
-
 
 # cuvaj dokument, prima tekst, ime fajla i cuva za download u txt, docx i pdf formatu
-def sacuvaj_dokument(content, file_name):
-    st.info("Čuva dokument")
-    options = {
-        "encoding": "UTF-8",  # Set the encoding to UTF-8
-        "no-outline": None,
-        "quiet": "",
-    }
-    html = markdown.markdown(content)
-    buf = html2docx(html, title="Zapisnik")
-    word_data = buf.getvalue()
-    pdf_data = pdfkit.from_string(html, False, options=options)
-    
-    st.download_button(
-        "Download Prevod .txt",
-        content,
-        file_name=f"{file_name}.txt",
-        help="Čuvanje dokumenta",
-    )
-            
-    st.download_button(
-        label="Download Prevod .docx",
-        data=word_data,
-        file_name=f"{file_name}.docx",
-        mime="docx",
-        help= "Čuvanje dokumenta",
-    )
-            
-    st.download_button(
-        label="Download Prevod .pdf",
-        data=pdf_data,
-        file_name=f"{file_name}.pdf",
-        mime="application/octet-stream",
-        help= "Čuvanje dokumenta",
-    )
 
 
 # cita tekst i upit a izlaz je mp3 player
@@ -183,7 +84,7 @@ def sacuvaj_dokument(content, file_name):
 
 # cita tekst i prevodi. Prima jezik izlaza i izlaz je prevedeni tekst
 def citaj_tekst(jezik_izlaza):
-    
+    client=OpenAI()
     st.info("Čita tekst")
     uploaded_file = st.file_uploader(
         "Izaberite tekst za prevod",
