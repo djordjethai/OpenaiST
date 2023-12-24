@@ -10,10 +10,12 @@ import io
 from myfunc.mojafunkcija import (
     st_style,
     positive_login,
-    audio_izlaz,
-    priprema,
     sacuvaj_dokument,
    )
+from myfunc.asistenti import (
+    audio_izlaz,
+    priprema,
+    )
 import PyPDF2
 from langchain.document_loaders import UnstructuredFileLoader
 import re
