@@ -17,7 +17,7 @@ from myfunc.asistenti import (
     priprema,
     )
 import PyPDF2
-from langchain.document_loaders import UnstructuredFileLoader
+from langchain_community.document_loaders import UnstructuredFileLoader
 import re
 
 st_style()
